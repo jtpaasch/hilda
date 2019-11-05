@@ -1,6 +1,6 @@
 module Dispatch where
 
-{- | Specifies command sequences and halders for each of them. -}
+{- | Specifies command sequences and handlers for each of them. -}
 
 import Args
 import CLI
