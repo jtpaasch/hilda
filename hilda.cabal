@@ -12,7 +12,7 @@ extra-source-files:  CHANGELOG.md, README.md, Makefile, .gitignore
 executable hilda
   main-is:             Main.hs
   build-depends:       base ^>=4.12.0.0
-  other-modules:       Args, CLI, Dispatch, SequenceMatcher
+  other-modules:       Args, CLI, Dispatch, SequenceMatcher, Bar, Foo
   hs-source-dirs:      src
   default-language:    Haskell2010
 
