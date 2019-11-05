@@ -42,7 +42,8 @@ usage =
     , ""
     , "COMMANDS:"
     , ""
-    , "  foo bar"
+    , "  foo"
+    , "  bar biz"
     ]
 
 run :: IO ()
