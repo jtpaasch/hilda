@@ -1,5 +1,3 @@
-exe = "hilda"
-
 build:
 	cabal new-build
 
