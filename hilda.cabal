@@ -13,8 +13,9 @@ executable hilda
   main-is:             Main.hs
   build-depends:       base ^>=4.12.0.0
   other-modules:       Conf.Constants, Conf.CLI, Conf.Dispatch,
+                       Lib.Utils.Result,
                        Lib.CommandLine.Args, Lib.CommandLine.Cmd,
-                       Handlers.Foo 
+                       Handlers.Utils, Handlers.Foo 
   hs-source-dirs:      src
   default-language:    Haskell2010
 

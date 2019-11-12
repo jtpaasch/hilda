@@ -1,21 +1,22 @@
 module Conf.Dispatch 
-  ( patterns
+  ( PatternSpec
+  , patterns
   ) where
 
 {- | Specifies command sequences and handlers for each of them. -}
 
-import qualified Lib.CommandLine.Args as Args
 import qualified Lib.CommandLine.Cmd as Cmd
+
 import qualified Conf.CLI as CLI
 
+import qualified Handlers.Utils as H
 import qualified Handlers.Foo as Foo
 
-{- | A list of 'Pattern' records.
+{- | An nicer name for a 'Pattern' record. -}
+type PatternSpec = Cmd.Pattern (CLI.AppArgs -> H.Result)
 
-Each record has a pattern (to match to command-line arguments),
-and a handler (to call if the command line arguments match the pattern).
--}
-patterns :: [Cmd.Pattern (Args.ParsedArgs CLI.OptSet -> IO ())]
+{- | A list of 'Pattern' records. -}
+patterns :: [PatternSpec]
 patterns =
     [ Cmd.Pattern { Cmd.pattern = ["foo"], Cmd.handler = Foo.run }
     ]

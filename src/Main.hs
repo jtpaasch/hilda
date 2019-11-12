@@ -9,15 +9,16 @@ import System.IO
 import qualified Lib.CommandLine.Args as Args
 import qualified Lib.CommandLine.Cmd as Cmd
 
+import qualified Lib.Utils.Result as R
+
 import qualified Conf.Constants as Config
 import qualified Conf.CLI as CLI
 import qualified Conf.Dispatch as Dispatch
 
+import qualified Handlers.Utils as H
+
 exitWithErr :: String -> Int -> IO a
 exitWithErr msg code = hPutStrLn stderr msg >> exitWith (ExitFailure code)
-
-handleError :: SomeException -> IO ()
-handleError e = exitWithErr ("An error occurred: " ++ (show e)) 1
 
 invalidOpts :: [String] -> String
 invalidOpts l =
@@ -47,6 +48,24 @@ usage =
     , "  bar biz"
     ]
 
+handleInvalids :: [String] -> IO ()
+handleInvalids invalids =
+  case length invalids > 0 of
+    True -> exitWithErr (invalidOpts invalids) 1
+    False -> return ()
+
+handleHelp :: CLI.OptSet -> IO ()
+handleHelp opts =
+  case CLI.help opts of
+    True -> exitWithErr usage 1
+    False -> return () 
+
+findHandler :: [String] -> IO (Dispatch.PatternSpec)
+findHandler pos = do
+  case Cmd.dispatch pos Dispatch.patterns of
+    Nothing -> exitWithErr (invalidCommands pos) 1
+    Just result -> return (result)
+
 main :: IO ()
 main = do
   rawArgs <- getArgs
@@ -54,16 +73,10 @@ main = do
   let opts = Args.options args
   let invalids = Args.invalid args
   let pos = Args.positional args
-  case length invalids > 0 of
-    True -> exitWithErr (invalidOpts invalids) 1
-    False -> case CLI.help opts of
-      True -> exitWithErr usage 1
-      False ->
-        let result = Cmd.dispatch pos Dispatch.patterns
-        in case Cmd.status result of
-          Cmd.UnrecognizedSample x ->
-            exitWithErr (invalidCommands x) 1
-          Cmd.Matched ->
-            case Cmd.match result of
-              Nothing -> exitWithErr (unrecognizedCommands pos) 1
-              Just x -> handle handleError ((Cmd.handler x) args)
+  handleInvalids invalids
+  handleHelp opts
+  handle <- findHandler pos 
+  let result = (Cmd.handler handle) args
+  case result of
+    R.Error e -> exitWithErr (show e) 1
+    R.Ok output -> putStrLn output

@@ -1,7 +1,5 @@
 module Lib.CommandLine.Cmd
-  ( Pattern(..)
-  , MatchStatus(..)
-  , Match(..)
+  ( Pattern (..)
   , dispatch
   ) where
 
@@ -16,21 +14,10 @@ data Pattern a = Pattern
   , handler :: a
   }
 
-{- | The status of a match attempt. -}
-data MatchStatus =
-    Matched
-  | UnrecognizedSample Sample
-
-{- | A match contains a (possible) matched pattern, and the status. -}
-data Match a = Match
-  { match :: Maybe (Pattern a)
-  , status :: MatchStatus
-  }
-
 {- | Matches a sample in a list of patterns and returns the first match. -} 
-dispatch :: Sample -> [Pattern a] -> Match a
+dispatch :: Sample -> [Pattern a] -> Maybe (Pattern a)
 dispatch sample patterns =
   let candidates = filter (\record -> sample == (pattern record)) patterns
    in case length candidates of
-     0 -> Match { match = Nothing, status = UnrecognizedSample sample }
-     _ -> Match { match = Just (head candidates), status = Matched }
+     0 -> Nothing
+     _ -> Just (head candidates)

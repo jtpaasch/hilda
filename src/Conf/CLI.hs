@@ -1,5 +1,6 @@
 module Conf.CLI (
-    OptSet(..) 
+    OptSet (..)
+  , AppArgs 
   , defaults
   , optSpecs
   ) where
@@ -10,6 +11,9 @@ import qualified Lib.CommandLine.Args as Args
 data OptSet = OptSet {
     help :: Bool
   } deriving (Show)
+
+{- | An alias for 'ParsedArgs' parsed into an 'OptSet'. -}
+type AppArgs = Args.ParsedArgs OptSet
 
 {- | Specs for 'Args' to match raw command line arguments. -}
 optSpecs :: [Args.Opt OptSet]
