@@ -13,5 +13,5 @@ import qualified Handlers.Utils as H
 run :: CLI.AppArgs -> H.Result
 run args =
   case True of
-    False -> R.Error (H.Other "Bad argument list")
-    True -> R.Ok "Running foo"
+    False -> return $ R.Error (H.Other "Bad argument list")
+    True -> return $ R.Ok "Running foo"

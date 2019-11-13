@@ -76,7 +76,7 @@ main = do
   handleInvalids invalids
   handleHelp opts
   handle <- findHandler pos 
-  let result = (Cmd.handler handle) args
+  result <- (Cmd.handler handle) args
   case result of
     R.Error e -> exitWithErr (show e) 1
     R.Ok output -> putStrLn output
