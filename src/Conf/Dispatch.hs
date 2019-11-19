@@ -20,5 +20,6 @@ type PatternSpec = Cmd.Pattern (CLI.AppArgs -> H.Result)
 patterns :: [PatternSpec]
 patterns =
     [ Cmd.Pattern { Cmd.pattern = ["foo"], Cmd.handler = Foo.run }
-    , Cmd.Pattern { Cmd.pattern = ["scratch"], Cmd.handler = Scratch.run }
+    , Cmd.Pattern { Cmd.pattern = ["create"], Cmd.handler = Scratch.create }
+    , Cmd.Pattern { Cmd.pattern = ["delete"], Cmd.handler = Scratch.delete }
     ]

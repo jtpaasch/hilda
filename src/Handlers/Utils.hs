@@ -2,32 +2,43 @@ module Handlers.Utils
   ( Error (..)
   , Result
   , missingFileArgMsg
+  , missingStackArgMsg
   , missingArgErr
+  , noAppDirErr
+  , alreadyExistsErr
   , noFileErr
   , noPermErr
   , inUseErr
   , diskFullErr
   , otherErr
   , require
-  , handleRead
+  , handleArtifactErr
   ) where
 
 {- | Common functions/types for all 'Handler' modules. -}
 
+import System.IO (FilePath)
+
 import qualified Lib.Utils.File as File
 import qualified Lib.Utils.Result as R
+
+import qualified App.Utils.Artifact as Artifact
 
 {- | Errors that handlers can return. -}
 data Error =
     MissingArg String
-  | NoFile String
-  | NoPerm String
-  | InUse String
-  | DiskFull String
+  | NoAppDir String
+  | AlreadyExists String
+  | NoFile FilePath
+  | NoPerm FilePath
+  | InUse FilePath
+  | DiskFull FilePath
   | Other String
 
 instance Show Error where
   show (MissingArg msg) = msg
+  show (NoAppDir msg) = msg
+  show (AlreadyExists msg) = msg
   show (NoFile msg) = msg
   show (NoPerm msg) = msg
   show (InUse msg) = msg
@@ -39,10 +50,15 @@ type Result = IO (R.Result Error String)
 
 {- | Some canned messages. -}
 missingFileArgMsg = "You must specify a file. Use '--file path'."
+missingStackArgMsg = "You must specify a stack. Use '--stack name'."
 
 {- | Some canned errors. -}
 missingArgErr msg =
   R.Error (MissingArg msg)
+noAppDirErr =
+  R.Error (NoAppDir $ "Could not identify an app data directory.")
+alreadyExistsErr name =
+  R.Error (AlreadyExists $ "'" ++ name ++ "' already exists.")
 noFileErr path = 
   R.Error (NoFile $ "No such file: '" ++ path ++ "'.")
 noPermErr path = 
@@ -61,14 +77,14 @@ require opt errMsg =
     Nothing -> missingArgErr errMsg
     Just val -> R.Ok val
 
-{- | Handle an attempt to read from a file. -}
-handleRead :: R.Result File.Error String -> FilePath -> R.Result Error String
-handleRead result path =
-  case result of
-    R.Error e -> case e of
-      File.NoFile -> noFileErr path
-      File.NoPerm -> noPermErr path
-      File.InUse -> inUseErr path
-      File.DiskFull -> diskFullErr path
-      File.Other msg -> otherErr msg
-    R.Ok x -> R.Ok x
+{- | Handle 'Artifact' errors. -}
+handleArtifactErr e =
+  case e of
+    Artifact.NoAppDataDir -> noAppDirErr
+    Artifact.AlreadyExists name -> alreadyExistsErr name 
+    Artifact.NoFile file -> noFileErr file
+    Artifact.NoPerm file -> noPermErr file
+    Artifact.InUse file -> inUseErr file
+    Artifact.DiskFull file -> diskFullErr file
+    Artifact.Other msg -> otherErr msg
+
