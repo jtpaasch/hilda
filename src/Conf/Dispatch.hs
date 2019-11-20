@@ -20,4 +20,5 @@ patterns :: [PatternSpec]
 patterns =
     [ Cmd.Pattern { Cmd.pattern = ["create"], Cmd.handler = Scratch.create }
     , Cmd.Pattern { Cmd.pattern = ["delete"], Cmd.handler = Scratch.delete }
+    , Cmd.Pattern { Cmd.pattern = ["list"], Cmd.handler = Scratch.list }
     ]

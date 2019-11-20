@@ -22,12 +22,14 @@ module Handlers.Utils
   , handleArtifactErr
   , handleDBErr
   , handleTemplateErr
+  , extractColumn
   ) where
 
 {- | Common functions/types for all 'Handler' modules. -}
 
 import System.IO (FilePath)
 
+import qualified Lib.DB.CSV as CSV
 import qualified Lib.IO.File as File
 import qualified Lib.Utils.Result as R
 
@@ -140,4 +142,12 @@ handleTemplateErr :: Template.Error -> RawResult
 handleTemplateErr e =
   case e of
     Template.RecordAlreadyExists stack -> templateAlreadyExistsErr stack 
+
+{- | Get the values for a specific column in a table. -}
+extractColumn :: CSV.Table -> CSV.Column -> [String]
+extractColumn table col =
+  let theRows = CSV.rows table
+  in map (\r -> case CSV.get r col of
+        Nothing -> "n/a"
+        Just value -> value) theRows
 

@@ -1,6 +1,7 @@
 module Handlers.Scratch
   ( create 
   , delete 
+  , list
   ) where
 
 {-| A 'Scratch' module, for experimenting. -}
@@ -21,6 +22,7 @@ import qualified App.Data.Template as Template
 -- TO DO: Remove when finished debugging
 import qualified Lib.DB.CSV as CSV
 
+{- | Create a new stack template. -}
 create :: CLI.AppArgs -> H.Result
 create args =
   -- Make sure the right arguments were provided.
@@ -52,8 +54,9 @@ create args =
                       result <- DB.save Consts.templateTable tbl'
                       case result of
                         R.Error e -> return $ H.handleDBErr e 
-                        R.Ok tbl'' -> return $ R.Ok (show (CSV.rawTable tbl''))
+                        R.Ok tbl'' -> return $ R.Ok "Ok"
 
+{- | Delete a stack template. -}
 delete :: CLI.AppArgs -> H.Result
 delete args =
   let opts = Args.options args
@@ -82,3 +85,13 @@ delete args =
                       case result of
                         R.Error e -> return $ H.handleArtifactErr e
                         R.Ok value -> return $ R.Ok "Ok"
+
+{- | List all stack templates. -}
+list :: CLI.AppArgs -> H.Result
+list args = do
+  table <- DB.load Consts.templateTable Consts.templateTableHeaders
+  case table of
+    R.Error e -> return $ H.handleDBErr e
+    R.Ok tbl ->
+      let output = H.extractColumn tbl "id"
+      in return $ R.Ok (unlines output)
