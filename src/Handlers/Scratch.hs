@@ -6,18 +6,24 @@ module Handlers.Scratch
 {-| A 'Scratch' module, for experimenting. -}
 
 import qualified Lib.CommandLine.Args as Args
-import qualified Lib.Utils.File as File
 import qualified Lib.Utils.Result as R
+import qualified Lib.IO.File as File
 
 import qualified Conf.CLI as CLI
+import qualified Conf.Constants as Consts
 
 import qualified Handlers.Utils as H
 
-import qualified App.Utils.Artifact as Artifact
+import qualified App.IO.Artifact as Artifact
+import qualified App.IO.DB as DB
+import qualified App.Data.Template as Template
 
+-- TO DO: Remove when finished debugging
+import qualified Lib.DB.CSV as CSV
 
 create :: CLI.AppArgs -> H.Result
 create args =
+  -- Make sure the right arguments were provided.
   let opts = Args.options args
       file = CLI.file opts
       stack = CLI.stack opts
@@ -27,10 +33,26 @@ create args =
       case H.require stack H.missingStackArgMsg of
         R.Error err -> return $ R.Error err
         R.Ok stk -> do
-          result <- Artifact.create srcPath stk
+          -- Copy the src template to local artifact storage.
+          result <- Artifact.create Artifact.Template srcPath stk
           case result of
             R.Error e -> return $ H.handleArtifactErr e
-            R.Ok value -> return $ R.Ok value
+            R.Ok path -> do
+              -- Load the templates table.
+              table <- DB.load Consts.templateTable Consts.templateTableHeaders
+              case table of
+                R.Error e -> return $ H.handleDBErr e
+                R.Ok tbl -> do
+                  -- Add an entry for the new template.
+                  let result = Template.create tbl stk path
+                  case result of
+                    R.Error e -> return $ H.handleTemplateErr e
+                    R.Ok tbl' -> do
+                      -- Save the table.
+                      result <- DB.save Consts.templateTable tbl'
+                      case result of
+                        R.Error e -> return $ H.handleDBErr e 
+                        R.Ok tbl'' -> return $ R.Ok (show (CSV.rawTable tbl''))
 
 delete :: CLI.AppArgs -> H.Result
 delete args =
@@ -39,20 +61,24 @@ delete args =
   in case H.require stack H.missingStackArgMsg of
     R.Error err -> return $ R.Error err
     R.Ok stk -> do
-      result <- Artifact.delete stk
-      case result of
-        R.Error e -> return $ H.handleArtifactErr e
-        R.Ok value -> return $ R.Ok value
-
--- TO DO:
--- Get App Data dir
--- Copy file to it, and handle errors
--- Get file from it, and handle errors
--- Only then, try the database
--- TO DO:
--- Make interfaces:
--- * App/Utils/Artifact.hs
--- * App/Utils/DB.hs
--- Those will catch the lower level File errors 
--- and reraise as ArtifactError or DBError.
--- E.g., "CantReadTable" or "NoSuchArtifact".
+      table <- DB.load Consts.templateTable Consts.templateTableHeaders
+      case table of
+        R.Error e -> return $ H.handleDBErr e
+        R.Ok tbl -> do
+          let path = Template.get tbl stk "path"
+          let result = Template.delete tbl stk
+          case result of
+            R.Error e -> return $ H.handleTemplateErr e
+            R.Ok tbl' -> do
+              result <- DB.save Consts.templateTable tbl'
+              case result of
+                R.Error e -> return $ H.handleDBErr e
+                R.Ok tbl'' -> do
+                  return $ R.Ok (show (CSV.rawTable tbl''))
+                  case path of
+                    Nothing -> return $ R.Ok "Ok"
+                    Just path' -> do
+                      result <- Artifact.delete Artifact.Template path'
+                      case result of
+                        R.Error e -> return $ H.handleArtifactErr e
+                        R.Ok value -> return $ R.Ok "Ok"

@@ -1,7 +1,8 @@
 module Conf.Paths
   ( Result
   , Error (..)
-  , artifactPath
+  , templatePath
+  , dbPath
   ) where
 
 {- | Paths used by the application. -}
@@ -13,7 +14,7 @@ import System.IO
 import System.IO.Error
 
 import qualified Conf.Constants as Constants
-import qualified Lib.Utils.File as File
+import qualified Lib.IO.File as File
 import qualified Lib.Utils.Result as R
 
 {- | A result type for 'Path' operations. -}
@@ -79,10 +80,44 @@ artifacts = do
         Left e -> return (R.Error e)
         Right _ -> return (R.Ok path)
 
-{- | Construct an artifact path. -}
-artifactPath :: String -> Result
-artifactPath artifactName = do
+{- | Where to store app templates, relative to 'artifacts'. -}
+templates :: Result
+templates = do
   result <- artifacts
   case result of
     R.Error e -> return (R.Error e)
-    R.Ok dir -> return (R.Ok $ dir </> artifactName)
+    R.Ok value -> do
+      let path = value </> "templates"
+      result <- tryJust handleFileIOError (File.mkPath path)
+      case result of
+        Left e -> return (R.Error e)
+        Right _ -> return (R.Ok path)
+
+{- | Construct a path to a template. -}
+templatePath :: String -> Result
+templatePath templateName = do
+  result <- templates
+  case result of
+    R.Error e -> return (R.Error e)
+    R.Ok dir -> return (R.Ok $ dir </> templateName)
+
+{- | Where to store app DB tables, relative to 'store'. -}
+db :: Result
+db = do
+  result <- store
+  case result of
+    R.Error e -> return (R.Error e)
+    R.Ok value -> do
+      let path = value </> "db"
+      result <- tryJust handleFileIOError (File.mkPath path) 
+      case result of
+        Left e -> return (R.Error e)
+        Right _ -> return (R.Ok path)
+
+{- | Construct a DB table path. -}
+dbPath :: String -> Result
+dbPath tableName = do
+  result <- db
+  case result of
+    R.Error e -> return (R.Error e)
+    R.Ok dir -> return (R.Ok $ dir </> tableName)

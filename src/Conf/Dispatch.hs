@@ -10,7 +10,6 @@ import qualified Lib.CommandLine.Cmd as Cmd
 import qualified Conf.CLI as CLI
 
 import qualified Handlers.Utils as H
-import qualified Handlers.Foo as Foo
 import qualified Handlers.Scratch as Scratch
 
 {- | An nicer name for a 'Pattern' record. -}
@@ -19,7 +18,6 @@ type PatternSpec = Cmd.Pattern (CLI.AppArgs -> H.Result)
 {- | A list of 'Pattern' records. -}
 patterns :: [PatternSpec]
 patterns =
-    [ Cmd.Pattern { Cmd.pattern = ["foo"], Cmd.handler = Foo.run }
-    , Cmd.Pattern { Cmd.pattern = ["create"], Cmd.handler = Scratch.create }
+    [ Cmd.Pattern { Cmd.pattern = ["create"], Cmd.handler = Scratch.create }
     , Cmd.Pattern { Cmd.pattern = ["delete"], Cmd.handler = Scratch.delete }
     ]

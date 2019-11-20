@@ -1,6 +1,7 @@
-module App.Utils.Artifact
+module App.IO.Artifact
   ( ArtifactURI
   , ArtifactName
+  , ArtifactKind (..)
   , Result
   , Error (..)
   , create
@@ -9,7 +10,7 @@ module App.Utils.Artifact
 
 {- | An interface to app artifacts. -}
 
-import qualified Lib.Utils.File as File
+import qualified Lib.IO.File as File
 import qualified Lib.Utils.Result as R
 
 import qualified Conf.Paths as Paths
@@ -19,20 +20,29 @@ type RawResultBool = R.Result Error Bool
 type RawResult = R.Result Error String
 type Result = IO RawResult
 
-{- | Errors the application can return. -}
+{- | Errors that can occur while working with artifacts. -}
 data Error =
     NoAppDataDir
-  | AlreadyExists ArtifactName
+  | AlreadyExists FilePath
   | NoFile FilePath
   | NoPerm FilePath
   | InUse FilePath
   | DiskFull FilePath
   | Other String
-  deriving (Show)
 
 {- | More convenient type names. -}
 type ArtifactURI = FilePath
 type ArtifactName = String
+
+{- | Types of artifacts. -}
+data ArtifactKind = 
+    Template
+
+{- | Functions that look up storage paths for kinds of artifacts. -}
+artifactPath :: ArtifactKind -> (ArtifactName -> Paths.Result)
+artifactPath kind =
+  case kind of
+    Template -> Paths.templatePath
 
 {- | Handle an attempt to read/write a file. -}
 handleFileIO :: File.RawResult -> RawResult
@@ -59,10 +69,11 @@ handleFileIOBool result =
     R.Ok x -> R.Ok x
 
 {- | Take a 'src' artifact and store it with the given name. -}
-create :: ArtifactURI -> ArtifactName -> Result
-create src name = do
+create :: ArtifactKind -> ArtifactURI -> ArtifactName -> Result
+create kind src name = do
   -- Get the app data dir.
-  result <- Paths.artifactPath name
+  let pathFinder = artifactPath kind
+  result <- pathFinder name
   case result of
     R.Error e -> 
       case e of
@@ -74,7 +85,7 @@ create src name = do
         R.Error e -> return $ R.Error e
         R.Ok doesExist ->
           case doesExist of
-            True -> return $ R.Error (AlreadyExists name)
+            True -> return $ R.Error (AlreadyExists path)
             False -> do
               -- Read the 'src' file.
               result <- File.read src
@@ -85,13 +96,14 @@ create src name = do
                   result <- File.write path contents
                   case handleFileIO result of
                     R.Error e -> return $ R.Error e
-                    R.Ok output -> return $ R.Ok output
+                    R.Ok _ -> return $ R.Ok path
 
 {- | Delete an artifact. -}
-delete :: ArtifactName -> Result
-delete name = do
+delete :: ArtifactKind -> ArtifactName -> Result
+delete kind name = do
   -- Get the app data dir.
-  result <- Paths.artifactPath name
+  let pathFinder = artifactPath kind
+  result <- pathFinder name
   case result of
     R.Error e ->
       case e of

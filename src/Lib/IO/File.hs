@@ -1,4 +1,4 @@
-module Lib.Utils.File
+module Lib.IO.File
   ( RawResultBool
   , ResultBool
   , RawResult
@@ -7,8 +7,8 @@ module Lib.Utils.File
   , mkPath
   , rm
   , exists
-  , Lib.Utils.File.read
-  , Lib.Utils.File.write
+  , Lib.IO.File.read
+  , Lib.IO.File.write
   ) where
 
 {- | File handling. -}
