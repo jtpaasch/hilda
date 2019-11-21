@@ -18,6 +18,7 @@ module Handlers.Utils
   , dbDiskFullErr
   , dbOtherErr
   , templateAlreadyExistsErr
+  , noRecordErr
   , require
   , handleArtifactErr
   , handleDBErr
@@ -54,6 +55,7 @@ data Error =
   | DBDiskFull FilePath
   | DBOther String
   | TemplateAlreadyExists String
+  | NoRecord String
 
 instance Show Error where
   show (MissingArg msg) = msg
@@ -70,6 +72,7 @@ instance Show Error where
   show (DBDiskFull msg) = msg
   show (DBOther msg) = msg
   show (TemplateAlreadyExists msg) = msg
+  show (NoRecord msg) = msg
 
 {- | A handler result is either a known error, or string output. -}
 type RawResult = R.Result Error String
@@ -106,6 +109,8 @@ dbOtherErr msg = R.Error (DBOther msg)
 templateAlreadyExistsErr stack = R.Error (
   TemplateAlreadyExists 
     ("A record for the stack '" ++ stack ++ "' already exists."))
+noRecordErr name = R.Error (
+  NoRecord ("No record of '" ++ name ++ "'."))
 
 {- | Require a command line argument. -}
 require :: Maybe String -> String -> R.Result Error String

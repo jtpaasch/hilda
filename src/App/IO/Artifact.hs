@@ -6,6 +6,7 @@ module App.IO.Artifact
   , Error (..)
   , create
   , delete
+  , details
   ) where
 
 {- | An interface to app artifacts. -}
@@ -115,3 +116,10 @@ delete kind name = do
         R.Error e -> return $ R.Error e
         R.Ok output -> return $ R.Ok output
 
+{- | Get the contents of an artifact. -}
+details :: FilePath -> Result
+details path = do
+  result <- File.read path
+  case handleFileIO result of
+    R.Error e -> return $ R.Error e
+    R.Ok contents -> return $ R.Ok contents

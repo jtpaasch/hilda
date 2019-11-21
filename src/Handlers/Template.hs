@@ -1,10 +1,11 @@
-module Handlers.Scratch
+module Handlers.Template
   ( create 
   , delete 
   , list
+  , details
   ) where
 
-{-| A 'Scratch' module, for experimenting. -}
+{-| Handles requests for templates. -}
 
 import qualified Lib.CommandLine.Args as Args
 import qualified Lib.Utils.Result as R
@@ -18,9 +19,6 @@ import qualified Handlers.Utils as H
 import qualified App.IO.Artifact as Artifact
 import qualified App.IO.DB as DB
 import qualified App.Data.Template as Template
-
--- TO DO: Remove when finished debugging
-import qualified Lib.DB.CSV as CSV
 
 {- | Create a new stack template. -}
 create :: CLI.AppArgs -> H.Result
@@ -77,7 +75,6 @@ delete args =
               case result of
                 R.Error e -> return $ H.handleDBErr e
                 R.Ok tbl'' -> do
-                  return $ R.Ok (show (CSV.rawTable tbl''))
                   case path of
                     Nothing -> return $ R.Ok "Ok"
                     Just path' -> do
@@ -95,3 +92,24 @@ list args = do
     R.Ok tbl ->
       let output = H.extractColumn tbl "id"
       in return $ R.Ok (unlines output)
+
+{- | Details of a stack template. -}
+details :: CLI.AppArgs -> H.Result
+details args =
+  let opts = Args.options args
+      stack = CLI.stack opts
+  in case H.require stack H.missingStackArgMsg of
+    R.Error err -> return $ R.Error err
+    R.Ok stk -> do
+      table <- DB.load Consts.templateTable Consts.templateTableHeaders
+      case table of
+        R.Error e -> return $ H.handleDBErr e
+        R.Ok tbl -> do
+          let path = Template.get tbl stk "path"
+          case path of
+            Nothing -> return $ H.noRecordErr stk
+            Just path' -> do
+              result <- Artifact.details path'
+              case result of
+                R.Error e -> return $ H.handleArtifactErr e
+                R.Ok contents -> return $ R.Ok contents

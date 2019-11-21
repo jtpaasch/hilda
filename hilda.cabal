@@ -18,7 +18,7 @@ executable hilda
                        Lib.DB.CSV, Lib.IO.File,
                        App.IO.Artifact, App.IO.DB,
                        App.Data.Template,
-                       Handlers.Utils, Handlers.Scratch 
+                       Handlers.Utils, Handlers.Template 
   hs-source-dirs:      src
   default-language:    Haskell2010
 
