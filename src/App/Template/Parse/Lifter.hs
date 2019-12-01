@@ -9,8 +9,8 @@ module App.Template.Parse.Lifter
 import qualified App.Template.Types as T 
 import qualified App.Template.Parse.Parser as Parse
 
-liftHosts :: Parse.Tree -> T.Host
-liftHosts tree =
+liftHost :: Parse.Tree -> T.Host
+liftHost tree =
   case tree of
     Parse.HostNode nameTree bootImgTree ->
       case nameTree of
@@ -22,8 +22,8 @@ liftHosts tree =
         _ -> error $ "Expected HostNameNode: " ++ (show nameTree)
     _ -> error $ "Expected HostNode: " ++ (show tree)
 
-liftLinks :: Parse.Tree -> T.Link
-liftLinks tree =
+liftLink :: Parse.Tree -> T.Link
+liftLink tree =
   case tree of
     Parse.LinkNode srcTree dstTree ->
       case srcTree of
@@ -43,10 +43,10 @@ lift tree =
             Parse.SubnetNode cidr -> cidr
             _ -> error $ "Expected SubnetNode: " ++ (show tree)
           hosts = case hostsTree of
-            Parse.HostsNode hosts -> map liftHosts hosts
+            Parse.HostsNode hosts -> map liftHost hosts
             _ -> error $ "Expected HostsNode: " ++ (show tree)
           links = case linksTree of
-            Parse.LinksNode links -> map liftLinks links
+            Parse.LinksNode links -> map liftLink links
             _ -> error $ "Expected LinksNode: " ++ (show tree)
       in T.Network { T.subnet = subnet, T.hosts = hosts, T.links = links }
     _ -> error $ "Expected NetworkNode: " ++ (show tree)
