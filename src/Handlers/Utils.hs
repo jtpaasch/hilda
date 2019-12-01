@@ -3,7 +3,7 @@ module Handlers.Utils
   , RawResult
   , Result
   , missingFileArgMsg
-  , missingStackArgMsg
+  , missingNameArgMsg
   , missingArgErr
   , noAppDirErr
   , alreadyExistsErr
@@ -24,6 +24,7 @@ module Handlers.Utils
   , handleDBErr
   , handleTemplateErr
   , extractColumn
+  , parseTemplate
   ) where
 
 {- | Common functions/types for all 'Handler' modules. -}
@@ -33,11 +34,17 @@ import System.IO (FilePath)
 import qualified Lib.DB.CSV as CSV
 import qualified Lib.IO.File as File
 import qualified Lib.Utils.Result as R
+import qualified Lib.Utils.String as S
 
 import qualified App.IO.Artifact as Artifact
 import qualified App.IO.DB as DB
 
 import qualified App.Data.Template as Template
+
+import qualified App.Template.Types as T
+import qualified App.Template.Parse.Lexer as Lexer
+import qualified App.Template.Parse.Parser as Parser
+import qualified App.Template.Parse.Lifter as Lifter
 
 {- | Errors that handlers can return. -}
 data Error =
@@ -80,7 +87,7 @@ type Result = IO RawResult
 
 {- | Some canned messages. -}
 missingFileArgMsg = "You must specify a file. Use '--file path'."
-missingStackArgMsg = "You must specify a stack. Use '--stack name'."
+missingNameArgMsg = "You must specify a name. Use '--name value'."
 
 {- | Some canned errors. -}
 missingArgErr msg = R.Error (MissingArg msg)
@@ -106,9 +113,9 @@ tableInUseErr path = R.Error (
 dbDiskFullErr path = R.Error (
   DBDiskFull $ "Can't access DB table (disk full): '" ++ path ++ "'.")
 dbOtherErr msg = R.Error (DBOther msg)
-templateAlreadyExistsErr stack = R.Error (
+templateAlreadyExistsErr name = R.Error (
   TemplateAlreadyExists 
-    ("A record for the stack '" ++ stack ++ "' already exists."))
+    ("A record for the template '" ++ name ++ "' already exists."))
 noRecordErr name = R.Error (
   NoRecord ("No record of '" ++ name ++ "'."))
 
@@ -146,7 +153,7 @@ handleDBErr e =
 handleTemplateErr :: Template.Error -> RawResult
 handleTemplateErr e =
   case e of
-    Template.RecordAlreadyExists stack -> templateAlreadyExistsErr stack 
+    Template.RecordAlreadyExists name -> templateAlreadyExistsErr name 
 
 {- | Get the values for a specific column in a table. -}
 extractColumn :: CSV.Table -> CSV.Column -> [String]
@@ -156,3 +163,11 @@ extractColumn table col =
         Nothing -> "n/a"
         Just value -> value) theRows
 
+{- | Parse the contents of a template. -}
+parseTemplate :: String -> T.Network
+parseTemplate contents =
+  let rawLines = lines contents
+      trimmedLines = map S.trim rawLines
+      tokens = Lexer.tokenize trimmedLines
+      tree = Parser.parse tokens
+  in Lifter.lift tree

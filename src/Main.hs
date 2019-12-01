@@ -44,8 +44,17 @@ usage =
     , ""
     , "COMMANDS:"
     , ""
-    , "  foo"
-    , "  bar biz"
+    , "- " ++ Config.app ++ " template create --name [name] --file [path]"
+    , "  Create a template called [name] from the file located at [path]."
+    , ""
+    , "- " ++ Config.app ++ " template list"
+    , "  List all registered templates."
+    , ""
+    , "- " ++ Config.app ++ " template delete --name [name]"
+    , "  Delete the template called [name]."
+    , ""
+    , "- " ++ Config.app ++ " template details --name [name]"
+    , "  Show the template called [name]."
     ]
 
 handleInvalids :: [String] -> IO ()

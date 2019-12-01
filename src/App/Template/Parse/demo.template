@@ -1,0 +1,16 @@
+- Network:
+  - Subnet: 172.19.0.1/24
+  - Hosts:
+    - Host:
+        Name: Host_1
+        Boot: ubuntu:bionic
+    - Host:
+        Name: Host_2
+        Boot: ubuntu:bionic
+  - Links:
+    - Link:
+        Src: Host_1
+        Dst: Host_2
+    - Link:
+        Src: Host_1
+        Dst: Host_2

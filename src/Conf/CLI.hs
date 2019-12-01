@@ -10,7 +10,7 @@ import qualified Lib.CommandLine.Args as Args
 {- | A custom set of options and their types. -}
 data OptSet = OptSet {
     help :: Bool
-  , stack :: Maybe String
+  , name :: Maybe String
   , file :: Maybe String
   } deriving (Show)
 
@@ -26,9 +26,9 @@ optSpecs = [
       , Args.handler = \h optSet _ -> optSet { help = True }
       }
   , Args.Opt {
-      Args.ids = ["--stack"]
+      Args.ids = ["--name"]
     , Args.flag = False
-    , Args.handler = \h optSet idents -> optSet { stack = Args.next idents }
+    , Args.handler = \h optSet idents -> optSet { name = Args.next idents }
     }
   , Args.Opt {
       Args.ids = ["--file"]
@@ -42,7 +42,7 @@ defaults :: Args.ParsedArgs OptSet
 defaults = Args.ParsedArgs {
     Args.options = OptSet {
         help = False
-      , stack = Nothing
+      , name = Nothing
       , file = Nothing
       }
   , Args.invalid = []

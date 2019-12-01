@@ -20,21 +20,21 @@ import qualified App.IO.Artifact as Artifact
 import qualified App.IO.DB as DB
 import qualified App.Data.Template as Template
 
-{- | Create a new stack template. -}
+{- | Create a new template. -}
 create :: CLI.AppArgs -> H.Result
 create args =
   -- Make sure the right arguments were provided.
   let opts = Args.options args
       file = CLI.file opts
-      stack = CLI.stack opts
+      name = CLI.name opts
   in case H.require file H.missingFileArgMsg of 
     R.Error err -> return $ R.Error err
     R.Ok srcPath -> do
-      case H.require stack H.missingStackArgMsg of
+      case H.require name H.missingNameArgMsg of
         R.Error err -> return $ R.Error err
-        R.Ok stk -> do
+        R.Ok nm -> do
           -- Copy the src template to local artifact storage.
-          result <- Artifact.create Artifact.Template srcPath stk
+          result <- Artifact.create Artifact.Template srcPath nm
           case result of
             R.Error e -> return $ H.handleArtifactErr e
             R.Ok path -> do
@@ -44,7 +44,7 @@ create args =
                 R.Error e -> return $ H.handleDBErr e
                 R.Ok tbl -> do
                   -- Add an entry for the new template.
-                  let result = Template.create tbl stk path
+                  let result = Template.create tbl nm path
                   case result of
                     R.Error e -> return $ H.handleTemplateErr e
                     R.Ok tbl' -> do
@@ -54,20 +54,20 @@ create args =
                         R.Error e -> return $ H.handleDBErr e 
                         R.Ok tbl'' -> return $ R.Ok "Ok"
 
-{- | Delete a stack template. -}
+{- | Delete a template. -}
 delete :: CLI.AppArgs -> H.Result
 delete args =
   let opts = Args.options args
-      stack = CLI.stack opts
-  in case H.require stack H.missingStackArgMsg of
+      name = CLI.name opts
+  in case H.require name H.missingNameArgMsg of
     R.Error err -> return $ R.Error err
-    R.Ok stk -> do
+    R.Ok nm -> do
       table <- DB.load Consts.templateTable Consts.templateTableHeaders
       case table of
         R.Error e -> return $ H.handleDBErr e
         R.Ok tbl -> do
-          let path = Template.get tbl stk "path"
-          let result = Template.delete tbl stk
+          let path = Template.get tbl nm "path"
+          let result = Template.delete tbl nm
           case result of
             R.Error e -> return $ H.handleTemplateErr e
             R.Ok tbl' -> do
@@ -83,7 +83,7 @@ delete args =
                         R.Error e -> return $ H.handleArtifactErr e
                         R.Ok value -> return $ R.Ok "Ok"
 
-{- | List all stack templates. -}
+{- | List all templates. -}
 list :: CLI.AppArgs -> H.Result
 list args = do
   table <- DB.load Consts.templateTable Consts.templateTableHeaders
@@ -93,23 +93,23 @@ list args = do
       let output = H.extractColumn tbl "id"
       in return $ R.Ok (unlines output)
 
-{- | Details of a stack template. -}
+{- | Details of a template. -}
 details :: CLI.AppArgs -> H.Result
 details args =
   let opts = Args.options args
-      stack = CLI.stack opts
-  in case H.require stack H.missingStackArgMsg of
+      name = CLI.name opts
+  in case H.require name H.missingNameArgMsg of
     R.Error err -> return $ R.Error err
-    R.Ok stk -> do
+    R.Ok nm -> do
       table <- DB.load Consts.templateTable Consts.templateTableHeaders
       case table of
         R.Error e -> return $ H.handleDBErr e
         R.Ok tbl -> do
-          let path = Template.get tbl stk "path"
+          let path = Template.get tbl nm "path"
           case path of
-            Nothing -> return $ H.noRecordErr stk
+            Nothing -> return $ H.noRecordErr nm
             Just path' -> do
               result <- Artifact.details path'
               case result of
                 R.Error e -> return $ H.handleArtifactErr e
-                R.Ok contents -> return $ R.Ok contents
+                R.Ok contents -> return $ R.Ok contents 

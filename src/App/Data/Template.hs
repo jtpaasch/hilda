@@ -6,6 +6,8 @@ module App.Data.Template
   , delete
   ) where
 
+{- | CRUD for the templates table in the program's local DB. -}
+
 import qualified Lib.Utils.Result as R
 import qualified Lib.DB.CSV as CSV
 
