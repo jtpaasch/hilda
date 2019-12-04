@@ -12,6 +12,8 @@ data OptSet = OptSet {
     help :: Bool
   , name :: Maybe String
   , file :: Maybe String
+  , template :: Maybe String
+  , provider :: Maybe String
   } deriving (Show)
 
 {- | An alias for 'ParsedArgs' parsed into an 'OptSet'. -}
@@ -35,6 +37,16 @@ optSpecs = [
     , Args.flag = False
     , Args.handler = \h optSet idents -> optSet { file = Args.next idents }
     }
+  , Args.Opt {
+      Args.ids = ["--template"]
+    , Args.flag = False
+    , Args.handler = \h optSet idents -> optSet { template = Args.next idents }
+    }
+  , Args.Opt {
+      Args.ids = ["--provider"]
+    , Args.flag = False
+    , Args.handler = \h optSet idents -> optSet {provider = Args.next idents }
+    }
   ]
 
 {- | A default 'ParsedArgs' record. -}
@@ -44,6 +56,8 @@ defaults = Args.ParsedArgs {
         help = False
       , name = Nothing
       , file = Nothing
+      , template = Nothing
+      , provider = Nothing
       }
   , Args.invalid = []
   , Args.positional = []

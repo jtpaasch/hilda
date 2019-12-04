@@ -15,10 +15,10 @@ Here is an example template, called `mystack.template`:
   - Hosts:
     - Host:
         Name: host1
-        BootImg: ubuntu:bionic
+        Boot: ubuntu:bionic
     - Host:
         Name: host2
-        BootImg: alpine:latest
+        Boot: alpine:latest
   - Links:
     - Link:
         Src: host1

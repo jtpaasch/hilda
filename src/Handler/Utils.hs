@@ -1,9 +1,11 @@
-module Handlers.Utils
+module Handler.Utils
   ( Error (..)
   , RawResult
   , Result
   , missingFileArgMsg
   , missingNameArgMsg
+  , missingTemplateArgMsg
+  , missingProviderArgMsg
   , missingArgErr
   , noAppDirErr
   , alreadyExistsErr
@@ -19,10 +21,16 @@ module Handlers.Utils
   , dbOtherErr
   , templateAlreadyExistsErr
   , noRecordErr
+  , noProviderErr
+  , noProviderEndpointErr
+  , networkAlreadyExistsErr
+  , subnetAlreadyExistsErr
+  , hostAlreadyExistsErr
   , require
   , handleArtifactErr
   , handleDBErr
   , handleTemplateErr
+  , handleProviderErr
   , extractColumn
   , parseTemplate
   ) where
@@ -38,6 +46,7 @@ import qualified Lib.Utils.String as S
 
 import qualified App.IO.Artifact as Artifact
 import qualified App.IO.DB as DB
+import qualified App.IO.Provider as Provider
 
 import qualified App.Data.Template as Template
 
@@ -63,6 +72,11 @@ data Error =
   | DBOther String
   | TemplateAlreadyExists String
   | NoRecord String
+  | NoProvider String
+  | NoProviderEndpoint String
+  | NetworkAlreadyExists String
+  | SubnetAlreadyExists String
+  | HostAlreadyExists String
 
 instance Show Error where
   show (MissingArg msg) = msg
@@ -80,6 +94,11 @@ instance Show Error where
   show (DBOther msg) = msg
   show (TemplateAlreadyExists msg) = msg
   show (NoRecord msg) = msg
+  show (NoProvider msg) = msg
+  show (NoProviderEndpoint msg) = msg
+  show (NetworkAlreadyExists msg) = msg
+  show (SubnetAlreadyExists msg) = msg
+  show (HostAlreadyExists msg) = msg
 
 {- | A handler result is either a known error, or string output. -}
 type RawResult = R.Result Error String
@@ -88,6 +107,8 @@ type Result = IO RawResult
 {- | Some canned messages. -}
 missingFileArgMsg = "You must specify a file. Use '--file path'."
 missingNameArgMsg = "You must specify a name. Use '--name value'."
+missingTemplateArgMsg = "You must specify a template. Use '--template value'."
+missingProviderArgMsg = "You must specify a provider. Use '--provider value'."
 
 {- | Some canned errors. -}
 missingArgErr msg = R.Error (MissingArg msg)
@@ -118,6 +139,15 @@ templateAlreadyExistsErr name = R.Error (
     ("A record for the template '" ++ name ++ "' already exists."))
 noRecordErr name = R.Error (
   NoRecord ("No record of '" ++ name ++ "'."))
+noProviderErr = R.Error $ NoProvider "No such provider."
+noProviderEndpointErr =
+  R.Error $ NoProviderEndpoint "Provider endpoint not accessible."
+networkAlreadyExistsErr = 
+  R.Error $ NetworkAlreadyExists "Network already exists."
+subnetAlreadyExistsErr =
+  R.Error $ SubnetAlreadyExists "Subnet already exists."
+hostAlreadyExistsErr = 
+  R.Error $ HostAlreadyExists "Host already exists."
 
 {- | Require a command line argument. -}
 require :: Maybe String -> String -> R.Result Error String
@@ -154,6 +184,17 @@ handleTemplateErr :: Template.Error -> RawResult
 handleTemplateErr e =
   case e of
     Template.RecordAlreadyExists name -> templateAlreadyExistsErr name 
+
+{- | Handle 'Provider' errors. -}
+handleProviderErr :: Provider.Error -> RawResult
+handleProviderErr e =
+  case e of
+    Provider.NoSuchProvider -> noProviderErr
+    Provider.NoProviderEndpoint -> noProviderEndpointErr
+    Provider.NetworkAlreadyExists -> networkAlreadyExistsErr
+    Provider.SubnetAlreadyExists -> subnetAlreadyExistsErr
+    Provider.HostAlreadyExists -> hostAlreadyExistsErr
+    Provider.Other msg -> otherErr msg
 
 {- | Get the values for a specific column in a table. -}
 extractColumn :: CSV.Table -> CSV.Column -> [String]

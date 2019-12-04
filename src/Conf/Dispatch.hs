@@ -9,8 +9,9 @@ import qualified Lib.CommandLine.Cmd as Cmd
 
 import qualified Conf.CLI as CLI
 
-import qualified Handlers.Utils as H
-import qualified Handlers.Template as Template
+import qualified Handler.Utils as H
+import qualified Handler.Template as Template
+import qualified Handler.Deploy as Deploy
 
 {- | An nicer name for a 'Pattern' record. -}
 type PatternSpec = Cmd.Pattern (CLI.AppArgs -> H.Result)
@@ -33,5 +34,13 @@ patterns =
     , Cmd.Pattern { 
           Cmd.pattern = ["template", "details"]
         , Cmd.handler = Template.details 
+        }
+    , Cmd.Pattern {
+          Cmd.pattern = ["deploy", "create"]
+        , Cmd.handler = Deploy.create
+        }
+    , Cmd.Pattern {
+          Cmd.pattern = ["deploy", "delete"]
+        , Cmd.handler = Deploy.delete
         }
     ]

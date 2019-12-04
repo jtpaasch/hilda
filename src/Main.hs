@@ -15,7 +15,7 @@ import qualified Conf.Constants as Config
 import qualified Conf.CLI as CLI
 import qualified Conf.Dispatch as Dispatch
 
-import qualified Handlers.Utils as H
+import qualified Handler.Utils as H
 
 exitWithErr :: String -> Int -> IO a
 exitWithErr msg code = hPutStrLn stderr msg >> exitWith (ExitFailure code)
@@ -42,7 +42,7 @@ usage =
     , "OPTIONS:"
     , "  -h, --help   Display this help."
     , ""
-    , "COMMANDS:"
+    , "TEMPLATE COMMANDS:"
     , ""
     , "- " ++ Config.app ++ " template create --name [name] --file [path]"
     , "  Create a template called [name] from the file located at [path]."
@@ -55,6 +55,19 @@ usage =
     , ""
     , "- " ++ Config.app ++ " template details --name [name]"
     , "  Show the template called [name]."
+    , ""
+    , "DEPLOY COMMANDS:"
+    , ""
+    , "- " ++ Config.app ++ " deploy create --name [name] \\"
+    , "      --template [template] --provider [provider]"
+    , "  Deploy a stack called [name], from the template [template],"
+    , "  using the infrastructure provider [provider]. Currently,"
+    , "  only 'docker' is a valid provider."
+    , ""
+    , "- " ++ Config.app ++ " deploy delete --name [name] \\"
+    , "      --template [template] --provider [provider]"
+    , "  Delete the stack called [name], which was created from the"
+    , "  template [template], using the provider [provider]."
     ]
 
 handleInvalids :: [String] -> IO ()

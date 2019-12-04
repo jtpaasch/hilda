@@ -1,4 +1,4 @@
-module Handlers.Template
+module Handler.Template
   ( create 
   , delete 
   , list
@@ -14,10 +14,11 @@ import qualified Lib.IO.File as File
 import qualified Conf.CLI as CLI
 import qualified Conf.Constants as Consts
 
-import qualified Handlers.Utils as H
+import qualified Handler.Utils as H
 
 import qualified App.IO.Artifact as Artifact
 import qualified App.IO.DB as DB
+
 import qualified App.Data.Template as Template
 
 {- | Create a new template. -}
